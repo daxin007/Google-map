@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Place searches</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 70%;
+      }
+	   #right {
+        float: right;
+		
+        width: 20%;
+        padding-left: 2%;
+      }
+	  #rr {
+	  float: right;
+	  width: 60%;
+	  font-size:30px;
+	  }
+	  #under{
+	  position: absolute;
+      right: 20px;
+      bottom: 20px;
+	  }
+    </style>
+    <script>
+var map;
+var infowindow;
+var geocoder;
+var center;
+var m=new Array();
+var lat=0;
+var lng=0;
+var index=0;
+function initMap1() {
+lat=0;
+lng=0;
+geocoder = new google.maps.Geocoder();
+var date=document.getElementById("date").value;
+var ds=date.toString();
+var year=parseInt(ds.slice(0,4));
+var month=parseInt(ds.slice(5,7));
+var day=parseInt(ds.slice(8,10));
+//alert(day);
+var dt = new Date(year,(month-1),day);
+var d=dt.getDay();
+if (d==0)
+{
+   alert("Sorry,today is sunday,all the restaurants are closed");
+}
+else
+{
+function codeAddress() {
+
+for(var j=0;j<index;j++)
+   { 
+   var address = document.getElementById("in"+j).value;
+   
+    geocoder.geocode( { 'address': address}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        //alert(results[1].geometry.location);
+		//var s=(0,0);
+		m[j] = results[0].geometry.location;
+		//alert(m[j]);
+		lat+=results[0].geometry.location.lat();
+		lng+=results[0].geometry.location.lng();
+		
+ 
+  
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
+    });
+  }
+ 
+
+  }
+  codeAddress();
+  function codeAddress1() {
+   //setTimeout("codeAddress1()", 1000 );
+  var k=index;
+  
+	  var address = document.getElementById("in0").value;
+ geocoder.geocode( { 'address': address}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+	  
+       
+		var i = {lat:lat/k, lng:lng/k};
+		center=i;
+
+ map.setCenter(i);
+  infowindow = new google.maps.InfoWindow();
+   //var input = document.getElementById('pac-input').value;
+    var input1 = document.getElementById('pac-input1').value;
+	//alert(input1);
+  var service = new google.maps.places.PlacesService(map);
+  service.nearbySearch({
+    location: i,
+    radius: 3000,
+    type: 'bar',
+	 //query: 'restaurant'
+	//name: input1,
+	openNow: false,
+	//rankBy:DISTANCE,
+  }, callback); 
+  
+  setTimeout(function(){service.nearbySearch({
+    location: i,
+    radius: 3000,
+    type: 'restaurant',
+	 //query: 'restaurant'
+	name: input1,
+	openNow: false,
+	//rankBy:DISTANCE,
+  }, callback); },100);
+    setTimeout(function(){service.nearbySearch({
+    location: i,
+    radius: 3000,
+    type: 'night_club',
+	 //query: 'restaurant'
+	//name: input1,
+	openNow: false,
+	//rankBy:DISTANCE,
+  }, callback); },1000);
+ 
+  
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
+    });
+  
+ 
+
+  }
+  //codeAddress1();
+setTimeout(codeAddress1,1000);
+ var pyrmont = {lat:48.855218, lng:2.368622};
+ //var pyrmont = {lat:results[0].geometry.location.lat(), lng:results[0].geometry.location.lng()};
+   //var pyrmont = geocodeAddress(geocoder);
+ map = new google.maps.Map(document.getElementById('map'), {
+    center: pyrmont,
+    zoom: 16
+  });  
+ 
+
+
+}}
+
+function callback(results, status) {
+  if (status === google.maps.places.PlacesServiceStatus.OK) {
+  var distance=new Array();
+  var mi=0;
+    for (var i = 0; i < results.length; i++) {
+      //createMarker(results[i]);
+       //alert(results[i].name);
+	   //document.write(results[i].name);
+	   var service = new google.maps.DistanceMatrixService;
+  service.getDistanceMatrix({
+    origins: [center],
+    destinations: [results[i].name],
+    travelMode: google.maps.TravelMode.DRIVING,
+    unitSystem: google.maps.UnitSystem.METRIC,
+    avoidHighways: false,
+    avoidTolls: false
+  }, function(response, status1) {
+    if (status1 !== google.maps.DistanceMatrixStatus.OK) {
+      alert('Error was: ' + status);
+    } else {
+	  //alert(reponse[0]);
+      distanse[i]=response[0].rows.elements.distance.value;
+	  //alert(distance[0]);
+	  }
+	  })
+	  }
+	  for (var i = 0; i < distance.length; i++)
+	  {
+		if(distance[i]<distance[mi])
+		mi=i;
+	  }
+	  createMarker(results[mi]);
+	   var li = document.createElement('li');
+      li.appendChild(document.createTextNode(results[mi].name));
+      document.getElementById('results').appendChild(li);
+    }
+	else {
+	alert('Error was: ' + status);
+      }
+	  
+  }
+
+function createMarker(place) {
+  var placeLoc = place.geometry.location;
+  var marker = new google.maps.Marker({
+    map: map,
+    position: place.geometry.location
+  });
+
+  google.maps.event.addListener(marker, 'click', function() {
+    infowindow.setContent(place.name);
+    infowindow.open(map, this);
+  });
+}
+function creattext()
+{
+ var s=document.getElementById('input1').value;
+ index=document.getElementById('input1').value;
+ var a1=document.createElement("label");
+ var node=document.createTextNode("date:");
+  a1.appendChild(node);
+ var i1=document.createElement("input");
+ i1.id="date";
+ i1.type="date";
+ i1.value="2017-05-10";
+ i1.min="2017-01-01"; 
+ i1.max="2017-12-31";
+ i1.style.width="160px";
+ i1.style.height="20px";
+ var b1=document.createElement("br");
+
+var e1=document.getElementById("div2");
+e1.appendChild(a1);
+e1.appendChild(i1);
+e1.appendChild(b1);
+var a2=document.createElement("label");
+ var node2=document.createTextNode("aime:");
+  a2.appendChild(node2);
+  var i2=document.createElement("select");
+   i2.id="pac-input1"
+   i2.style.width="165px";
+   i2.style.height="22px";
+   var b2=document.createElement("br");
+  e1.appendChild(a2);
+e1.appendChild(i2);
+e1.appendChild(b2);
+document.getElementById("pac-input1").innerHTML = "<select name=sel1><option value=burger>burger</option><option value=pizza>pizza</option><option value=barbecue>barbecue</option><option value=cafe>cafe</option><option value=seafood>seafood</option><option value=chinese food>chinese food</option><option value=vegetables and fruits>vegetables ,fruits</option></select>"; 
+var a3=document.createElement("label");
+ var node3=document.createTextNode("position:");
+  a3.appendChild(node3);
+   var b3=document.createElement("br");
+  e1.appendChild(a3);
+e1.appendChild(b3);
+
+   for (var i=0;i<s;i++)
+ { 
+   var para=document.createElement("input");
+   var br=document.createElement("br");
+//var node=document.createTextNode("这是一个新段落。");
+//para.appendChild(node);
+ //para.value="pizza";
+  para.id='in'+i;
+   para.style.height="20px";
+  para.style.width="200px";
+  var element=document.getElementById("div2");
+  element.appendChild(para); 
+  element.appendChild(br);
+ }
+ var btn=document.createElement("input");
+	btn.type='button';
+	btn.value='confirmer';
+	btn.onclick=function(){
+	initMap1();		
+	};
+	var b4=document.createElement("br");
+ 
+e1.appendChild(btn);
+e1.appendChild(b4);
+   
+ function initMap() {
+  var pyrmont = {lat:48.855218, lng:2.368622};
+ //var pyrmont = {lat:results[0].geometry.location.lat(), lng:results[0].geometry.location.lng()};
+   //var pyrmont = geocodeAddress(geocoder);
+ map = new google.maps.Map(document.getElementById('map'), {
+    center: pyrmont,
+    zoom: 12
+  });  
+ for (var j=0;j<document.getElementById("input1").value;j++)
+ {
+  var input = /** @type {!HTMLInputElement} */(
+      document.getElementById("in"+j));
+
+  
+
+  var autocomplete = new google.maps.places.Autocomplete(input);
+   autocomplete.bindTo('bounds', map);
+  }
+  }
+initMap();
+ document.getElementById('div1').innerHTML = "";
+//setTimeout(initMap,1000);
+}
+
+
+
+    </script>
+  </head>
+   <body background="/image/tower.jpg">
+  
+ <!-- <a href="logout.php?logout">Sign Out</a> -->
+  
+
+ 
+  <div id="div1" style="width:30%;">
+ <label>combien de personnes?</label> <br> 
+<input id="input1" type="text" placeholder='number' value=''> <br>
+<button onClick="creattext()">soumettre</button> <br>  </div>
+<div id="right">
+<img src="/image/timg1.jpg" style="height:150px;width:150px;"/> 
+<p id="rr">Amusez-vous a paris!</p>
+</div>
+ <div id="div2" style="width:30%;">
+<!-- date: <input id="date" type="date" value="2017-05-10" min="2017-01-01" max="2017-12-31"> <br>
+like:
+<input id="pac-input1" type="text" placeholder='burger' value=''> <br> amusez
+<select name=sel1  id="pac-input1"><option value=1>burger</option><option value=2>pizza</option></select><br>
+place:
+ <div> <button id="search"onclick="initMap1()">search</button> </div>   -->
+
+
+ </div> 
+
+  <div id="map"></div>
+  <div id="right-panel">
+    <p id="p"> </p>
+    <ul id="results"></ul>
+  </div>
+<div id="under"> <a href="logout.php?logout"><img src="image\signout.png" style="height:50px;width:100px;"/></a> </div>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfy11wIbZHXKwH31mS5wdmItnmpi5jaYk&libraries=places" async defer></script>
+
+    </body>
+</html>
